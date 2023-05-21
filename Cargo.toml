@@ -1,5 +1,5 @@
 [package]
-name = "yass"
+name = "yass-2"
 version = "1.0.0"
 edition = "2021"
 readme = "README.md"
@@ -7,7 +7,7 @@ homepage = "https://github.com/binh-vu/strsim"
 repository = "https://github.com/binh-vu/strsim"
 license-file = "LICENSE"
 description = "Yet another string similarity library"
-keywords = ["string similarity", "strsim", "levenshtein", "jaro winkler", "jaro", "monge elkan"]
+keywords = ["string-similarity", "strsim", "levenshtein", "jaro-winkler"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
