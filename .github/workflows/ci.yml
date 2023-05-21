@@ -48,6 +48,12 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: wheels
+      - name: Publish to Crates
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_TOKEN }}
+        run: |
+          cargo publish --dry-run
+          cargo publish --no-verify || echo 'crate is already published'
       - name: Publish to PyPI
         uses: messense/maturin-action@v1
         env:
@@ -55,9 +61,3 @@ jobs:
         with:
           command: upload
           args: --skip-existing *
-      - name: Publish to Crates
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_TOKEN }}
-        run: |
-          cargo publish --dry-run
-          cargo publish --no-verify || echo 'crate is already published'
