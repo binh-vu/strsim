@@ -1,6 +1,6 @@
 [project]
 name = "strsim-2"
-version = "1.0.0"
+version = "1.0.1"
 description = "Yet another string similarity library (implemented in Rust)"
 readme = "README.md"
 authors = [
