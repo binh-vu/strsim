@@ -1,6 +1,6 @@
 [package]
 name = "yass-2"
-version = "1.0.1"
+version = "1.1.0"
 edition = "2021"
 readme = "README.md"
 homepage = "https://github.com/binh-vu/strsim"
@@ -19,7 +19,7 @@ derive_more = "0.99.17"
 hashbrown = "0.13.2"
 itertools = "0.10.5"
 lsap = "1.0.2"
-pyo3 = { version = "0.18.3", features = ["anyhow", "multiple-pymethods"] }
+pyo3 = { version = "0.19.1", features = ["anyhow", "multiple-pymethods"] }
 thiserror = "1.0.40"
 
 
