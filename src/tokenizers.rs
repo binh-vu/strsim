@@ -1,5 +1,8 @@
 use super::{Tokenizer, TokenizerType};
-use crate::helper::{ByReference, ByValue};
+use crate::{
+    helper::{ByReference, ByValue},
+    BaseTokenizer, MutTokenizer,
+};
 use derive_more::Display;
 use hashbrown::HashMap;
 use itertools::Itertools;
@@ -21,60 +24,60 @@ pub struct CachedWhitespaceTokenizer {
     unique_cache: HashMap<String, Vec<String>>,
 }
 
-impl Tokenizer<Vec<char>> for CharacterTokenizer {
+impl BaseTokenizer<Vec<char>> for CharacterTokenizer {
     type Return = ByValue;
 
     fn is_compatible(&self, tok_type: &TokenizerType) -> bool {
         !tok_type.has_nested()
     }
+}
 
-    fn tokenize<'t>(&'t mut self, s: &str) -> Vec<char> {
+impl Tokenizer<Vec<char>> for CharacterTokenizer {
+    fn tokenize<'t>(&'t self, s: &str) -> Vec<char> {
         s.chars().collect()
     }
 
-    fn tokenize_pair<'t>(&'t mut self, key: &str, query: &str) -> (Vec<char>, Vec<char>) {
+    fn tokenize_pair<'t>(&'t self, key: &str, query: &str) -> (Vec<char>, Vec<char>) {
         (key.chars().collect(), query.chars().collect())
     }
 
-    fn unique_tokenize<'t>(&'t mut self, s: &str) -> Vec<char> {
+    fn unique_tokenize<'t>(&'t self, s: &str) -> Vec<char> {
         s.chars().unique().collect::<Vec<char>>()
     }
 
-    fn unique_tokenize_pair<'t>(&'t mut self, key: &str, query: &str) -> (Vec<char>, Vec<char>) {
+    fn unique_tokenize_pair<'t>(&'t self, key: &str, query: &str) -> (Vec<char>, Vec<char>) {
         (self.unique_tokenize(key), self.unique_tokenize(query))
     }
 }
 
-impl Tokenizer<Vec<String>> for WhitespaceTokenizer {
+impl BaseTokenizer<Vec<String>> for WhitespaceTokenizer {
     type Return = ByValue;
 
     fn is_compatible(&self, tok_type: &TokenizerType) -> bool {
         !tok_type.has_nested()
     }
+}
 
-    fn tokenize<'t>(&'t mut self, s: &str) -> Vec<String> {
+impl Tokenizer<Vec<String>> for WhitespaceTokenizer {
+    fn tokenize<'t>(&'t self, s: &str) -> Vec<String> {
         s.split_whitespace().map(|s| s.to_owned()).collect()
     }
 
-    fn tokenize_pair<'t>(&'t mut self, key: &str, query: &str) -> (Vec<String>, Vec<String>) {
+    fn tokenize_pair<'t>(&'t self, key: &str, query: &str) -> (Vec<String>, Vec<String>) {
         (
             key.split_whitespace().map(|s| s.to_owned()).collect(),
             query.split_whitespace().map(|s| s.to_owned()).collect(),
         )
     }
 
-    fn unique_tokenize<'t>(&'t mut self, s: &str) -> Vec<String> {
+    fn unique_tokenize<'t>(&'t self, s: &str) -> Vec<String> {
         s.split_whitespace()
             .unique()
             .map(|s| s.to_owned())
             .collect()
     }
 
-    fn unique_tokenize_pair<'t>(
-        &'t mut self,
-        key: &str,
-        query: &str,
-    ) -> (Vec<String>, Vec<String>) {
+    fn unique_tokenize_pair<'t>(&'t self, key: &str, query: &str) -> (Vec<String>, Vec<String>) {
         let key_tokens: Vec<_> = key
             .split_whitespace()
             .unique()
@@ -90,7 +93,7 @@ impl Tokenizer<Vec<String>> for WhitespaceTokenizer {
     }
 }
 
-impl Tokenizer<Vec<Vec<char>>> for WhitespaceCharSeqTokenizer {
+impl BaseTokenizer<Vec<Vec<char>>> for WhitespaceCharSeqTokenizer {
     type Return = ByValue;
 
     fn is_compatible(&self, tok_type: &TokenizerType) -> bool {
@@ -100,12 +103,13 @@ impl Tokenizer<Vec<Vec<char>>> for WhitespaceCharSeqTokenizer {
             false
         }
     }
-
-    fn tokenize<'t>(&'t mut self, s: &str) -> Vec<Vec<char>> {
+}
+impl Tokenizer<Vec<Vec<char>>> for WhitespaceCharSeqTokenizer {
+    fn tokenize<'t>(&'t self, s: &str) -> Vec<Vec<char>> {
         s.split_whitespace().map(|s| s.chars().collect()).collect()
     }
 
-    fn tokenize_pair<'t>(&'t mut self, key: &str, query: &str) -> (Vec<Vec<char>>, Vec<Vec<char>>) {
+    fn tokenize_pair<'t>(&'t self, key: &str, query: &str) -> (Vec<Vec<char>>, Vec<Vec<char>>) {
         (
             key.split_whitespace()
                 .map(|s| s.chars().collect())
@@ -117,7 +121,7 @@ impl Tokenizer<Vec<Vec<char>>> for WhitespaceCharSeqTokenizer {
         )
     }
 
-    fn unique_tokenize<'t>(&'t mut self, s: &str) -> Vec<Vec<char>> {
+    fn unique_tokenize<'t>(&'t self, s: &str) -> Vec<Vec<char>> {
         s.split_whitespace()
             .unique()
             .map(|s| s.chars().collect())
@@ -125,7 +129,7 @@ impl Tokenizer<Vec<Vec<char>>> for WhitespaceCharSeqTokenizer {
     }
 
     fn unique_tokenize_pair<'t>(
-        &'t mut self,
+        &'t self,
         key: &str,
         query: &str,
     ) -> (Vec<Vec<char>>, Vec<Vec<char>>) {
@@ -144,13 +148,15 @@ impl Tokenizer<Vec<Vec<char>>> for WhitespaceCharSeqTokenizer {
     }
 }
 
-impl Tokenizer<Vec<String>> for CachedWhitespaceTokenizer {
+impl BaseTokenizer<Vec<String>> for CachedWhitespaceTokenizer {
     type Return = ByReference;
 
     fn is_compatible(&self, tok_type: &TokenizerType) -> bool {
         !tok_type.has_nested()
     }
+}
 
+impl MutTokenizer<Vec<String>> for CachedWhitespaceTokenizer {
     fn tokenize<'t>(&'t mut self, s: &str) -> &'t Vec<String> {
         if !self.cache.contains_key(s) {
             self.cache.insert(

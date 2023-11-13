@@ -40,30 +40,50 @@ pub trait ExpectTokenizerType {
 }
 
 pub trait StrSimWithTokenizer<T>: StrSim<T> {
-    /**
-     * Calculate the similarity between two strings. Usually, the similarity function is symmetric so
-     * key and query can be swapped. However, some functions such as monge-elkan are not symmetric, so
-     * key and query takes specific meaning: key is the value in the database and query is the search
-     * query from the user.
-     *
-     * The return value is a likelihood between 0 and 1.
-     *
-     * @param key the value in the database (e.g., entity label)
-     * @param query the search query from the user (e.g., cell in the table)
-     */
+    ///
+    /// Calculate the similarity between two strings. Usually, the similarity function is symmetric so
+    /// key and query can be swapped. However, some functions such as monge-elkan are not symmetric, so
+    /// key and query takes specific meaning: key is the value in the database and query is the search
+    /// query from the user.
+    ///
+    /// The return value is a likelihood between 0 and 1.
+    ///
+    /// # Arguments
+    ///
+    /// * `key` the value in the database (e.g., entity label)
+    /// * `query` the search query from the user (e.g., cell in the table)
+    ///
+    fn similarity(&self, key: &str, query: &str) -> Result<f64, StrSimError>;
+
+    ///
+    /// Calculate the similarity with the query's already been pre-tokenized
+    ///
+    fn similarity_pre_tok1(&self, key: &str, tokenized_query: &T) -> Result<f64, StrSimError>;
+
+    ///
+    /// Tokenize a string into a tokens used for this method.
+    ///
+    fn tokenize(&self, str: &str) -> T;
+
+    ///
+    /// Tokenize a list of strings into a list of tokens used for this method.
+    ///
+    fn tokenize_list(&self, strs: &[&str]) -> Vec<T>;
+}
+
+/// A mirror trait of StrSimWithTokenizer, but requires mutable self to invoke functions that call
+/// tokenizers' functions.
+pub trait StrSimWithMutTokenizer<T>: StrSim<T> {
+    /// See StrSimWithTokenizer::similarity
     fn similarity(&mut self, key: &str, query: &str) -> Result<f64, StrSimError>;
 
-    /** Calculate the similarity with the query's already been pre-tokenized */
+    /// See StrSimWithTokenizer::similarity_pre_tok1
     fn similarity_pre_tok1(&mut self, key: &str, tokenized_query: &T) -> Result<f64, StrSimError>;
 
-    /**
-     * Tokenize a string into a tokens used for this method.
-     */
+    /// See StrSimWithTokenizer::tokenize
     fn tokenize(&mut self, str: &str) -> T;
 
-    /**
-     * Tokenize a list of strings into a list of tokens used for this method.
-     */
+    /// See StrSimWithTokenizer::tokenize_list
     fn tokenize_list(&mut self, strs: &[&str]) -> Vec<T>;
 }
 
@@ -102,10 +122,34 @@ impl TokenizerType {
     }
 }
 
-pub trait Tokenizer<T> {
+pub trait BaseTokenizer<T> {
     type Return: for<'t> ReturnKind<'t, T>;
 
     fn is_compatible(&self, tok_type: &TokenizerType) -> bool;
+}
+
+pub trait Tokenizer<T>: BaseTokenizer<T> {
+    fn tokenize<'t>(&'t self, s: &str) -> <Self::Return as ReturnKind<'t, T>>::Type;
+    fn tokenize_pair<'t>(
+        &'t self,
+        key: &str,
+        query: &str,
+    ) -> (
+        <Self::Return as ReturnKind<'t, T>>::Type,
+        <Self::Return as ReturnKind<'t, T>>::Type,
+    );
+    fn unique_tokenize<'t>(&'t self, s: &str) -> <Self::Return as ReturnKind<'t, T>>::Type;
+    fn unique_tokenize_pair<'t>(
+        &'t self,
+        key: &str,
+        query: &str,
+    ) -> (
+        <Self::Return as ReturnKind<'t, T>>::Type,
+        <Self::Return as ReturnKind<'t, T>>::Type,
+    );
+}
+
+pub trait MutTokenizer<T>: BaseTokenizer<T> {
     fn tokenize<'t>(&'t mut self, s: &str) -> <Self::Return as ReturnKind<'t, T>>::Type;
     fn tokenize_pair<'t>(
         &'t mut self,
